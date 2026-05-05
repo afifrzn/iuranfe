@@ -7,6 +7,7 @@ const API = import.meta.env.VITE_API_URL || 'http://iuranapi.afifrzn.my.id/api'
 const data = ref([])
 const name = ref('')
 const withMeal = ref(false)
+const loadingBayar = ref(null)
 
 const fetchData = async () => {
   const res = await axios.get(`${API}/participants`)
@@ -15,19 +16,42 @@ const fetchData = async () => {
 
 const add = async () => {
   if (!name.value) return
-
   await axios.post(`${API}/participants`, {
     name: name.value,
     with_meal: withMeal.value
   })
-
   name.value = ''
   withMeal.value = false
   fetchData()
 }
 
+const launchConfetti = () => {
+  const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#a855f7']
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div')
+    el.style.cssText = `
+      position: fixed;
+      width: ${Math.random() * 8 + 6}px;
+      height: ${Math.random() * 8 + 6}px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      left: ${Math.random() * 100}vw;
+      top: -10px;
+      z-index: 9999;
+      pointer-events: none;
+      animation: confettiFall ${Math.random() * 1.5 + 1}s ease-in forwards;
+      animation-delay: ${Math.random() * 0.5}s;
+    `
+    document.body.appendChild(el)
+    setTimeout(() => el.remove(), 2500)
+  }
+}
+
 const bayar = async (id) => {
+  loadingBayar.value = id
   await axios.post(`${API}/participants/${id}/bayar`)
+  launchConfetti()
+  loadingBayar.value = null
   fetchData()
 }
 
@@ -42,12 +66,12 @@ const batal = async (id) => {
   fetchData()
 }
 
-const search = ref('')
-
 const downgrade = async (id) => {
   await axios.post(`${API}/participants/${id}/downgrade`)
   fetchData()
 }
+
+const search = ref('')
 
 onMounted(fetchData)
 
@@ -56,23 +80,14 @@ const totalSemua = computed(() =>
 )
 
 const totalBayar = computed(() =>
-  data.value.filter(p => p.paid)
-            .reduce((sum, p) => sum + p.amount, 0)
+  data.value.filter(p => p.paid).reduce((sum, p) => sum + p.amount, 0)
 )
 
-const belumBayar = computed(() =>
-  data.value.filter(p => !p.paid)
-)
-
-const sudahBayar = computed(() =>
-  data.value.filter(p => p.paid)
-)
-
-const filtered = computed(() => {
-  return data.value.filter(p =>
+const filtered = computed(() =>
+  data.value.filter(p =>
     p.name.toLowerCase().includes(search.value.toLowerCase())
   )
-})
+)
 </script>
 
 <template>
@@ -81,23 +96,28 @@ const filtered = computed(() => {
 
       <h1 class="text-2xl font-bold mb-4">💸 Iuran Villa</h1>
 
-      <!-- FORM -->
-       <input
+      <!-- SEARCH -->
+      <input
         v-model="search"
         placeholder="Cari nama..."
         class="border p-2 w-full rounded mb-3 text-black"
       />
-      <div class="bg-white p-4 rounded-xl shadow mb-4">
-        <input v-model="name" placeholder="Nama"
-          class="border p-2 w-full rounded mb-2 text-black" />
 
+      <!-- FORM TAMBAH -->
+      <div class="bg-white p-4 rounded-xl shadow mb-4">
+        <input
+          v-model="name"
+          placeholder="Nama"
+          class="border p-2 w-full rounded mb-2 text-black"
+        />
         <label class="flex items-center gap-2 mb-3 text-sm">
           <input type="checkbox" v-model="withMeal" />
           Pakai Makan (+38K)
         </label>
-
-        <button @click="add"
-          class="bg-blue-500 text-white px-4 py-2 rounded w-full">
+        <button
+          @click="add"
+          class="bg-blue-500 text-white px-4 py-2 rounded w-full"
+        >
           Tambah
         </button>
       </div>
@@ -110,7 +130,6 @@ const filtered = computed(() => {
             Rp {{ new Intl.NumberFormat('id-ID').format(totalSemua) }}
           </p>
         </div>
-
         <div class="bg-green-100 p-3 rounded-xl shadow">
           <p class="text-sm">Sudah Bayar</p>
           <p class="font-bold text-lg text-green-700">
@@ -123,9 +142,11 @@ const filtered = computed(() => {
       <div class="bg-white p-4 rounded-xl shadow mb-4">
         <h2 class="font-semibold mb-2 text-red-500">Belum Bayar</h2>
 
-        <div v-for="p in filtered.filter(p => !p.paid)" :key="p.id"
-          class="flex justify-between border-b py-2">
-
+        <div
+          v-for="p in filtered.filter(p => !p.paid)"
+          :key="p.id"
+          class="flex justify-between border-b py-2"
+        >
           <div>
             <p>{{ p.name }}</p>
             <p class="text-sm text-gray-500">
@@ -134,7 +155,6 @@ const filtered = computed(() => {
           </div>
 
           <div class="flex gap-2">
-            <!-- +Makan -->
             <button
               v-if="!p.with_meal"
               @click="upgrade(p.id)"
@@ -142,7 +162,6 @@ const filtered = computed(() => {
             >
               +Makan
             </button>
-            <!-- -Makan -->
             <button
               v-if="p.with_meal"
               @click="downgrade(p.id)"
@@ -150,12 +169,16 @@ const filtered = computed(() => {
             >
               -Makan
             </button>
-            <!-- Bayar -->
             <button
               @click="bayar(p.id)"
-              class="bg-blue-500 text-white px-2 py-1 rounded text-sm"
+              :disabled="loadingBayar === p.id"
+              class="bg-blue-500 text-white px-2 py-1 rounded text-sm flex items-center gap-1 transition-all disabled:opacity-70"
             >
-              Bayar
+              <span
+                v-if="loadingBayar === p.id"
+                class="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"
+              ></span>
+              <span>{{ loadingBayar === p.id ? 'Proses...' : 'Bayar' }}</span>
             </button>
           </div>
         </div>
@@ -165,7 +188,8 @@ const filtered = computed(() => {
       <div class="bg-white p-4 rounded-xl shadow">
         <h2 class="font-semibold mb-2 text-green-600">Sudah Bayar</h2>
 
-        <div v-for="p in filtered.filter(p => p.paid)"
+        <div
+          v-for="p in filtered.filter(p => p.paid)"
           :key="p.id"
           class="flex justify-between border-b py-2"
         >
@@ -177,7 +201,6 @@ const filtered = computed(() => {
           </div>
 
           <div class="flex gap-2">
-            <!-- -Makan kalau sudah makan -->
             <button
               v-if="p.with_meal"
               @click="downgrade(p.id)"
@@ -185,7 +208,6 @@ const filtered = computed(() => {
             >
               -Makan
             </button>
-            <!-- +Makan kalau belum -->
             <button
               v-if="!p.with_meal"
               @click="upgrade(p.id)"
@@ -206,3 +228,10 @@ const filtered = computed(() => {
     </div>
   </div>
 </template>
+
+<style>
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+</style>
