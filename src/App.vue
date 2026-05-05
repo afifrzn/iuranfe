@@ -8,6 +8,7 @@ const data = ref([])
 const name = ref('')
 const withMeal = ref(false)
 const loadingBayar = ref(null)
+const showSuccess = ref(false)
 
 const fetchData = async () => {
   const res = await axios.get(`${API}/participants`)
@@ -50,8 +51,10 @@ const launchConfetti = () => {
 const bayar = async (id) => {
   loadingBayar.value = id
   await axios.post(`${API}/participants/${id}/bayar`)
-  launchConfetti()
   loadingBayar.value = null
+  showSuccess.value = true
+  launchConfetti()
+  setTimeout(() => showSuccess.value = false, 2000)
   fetchData()
 }
 
@@ -226,10 +229,62 @@ const filtered = computed(() =>
       </div>
 
     </div>
+
+    <!-- SUCCESS MODAL -->
+    <Transition name="pop">
+      <div
+        v-if="showSuccess"
+        class="fixed inset-0 flex items-center justify-center z-50"
+        style="background: rgba(0,0,0,0.3);"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-3">
+          <div class="success-circle">
+            <svg class="checkmark" viewBox="0 0 52 52">
+              <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+              <path class="checkmark-check" fill="none" d="M14 27l8 8 16-16"/>
+            </svg>
+          </div>
+          <p class="text-lg font-bold text-gray-700">Pembayaran Berhasil!</p>
+        </div>
+      </div>
+    </Transition>
+
   </div>
 </template>
 
 <style>
+/* Pop transition */
+.pop-enter-active { animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.pop-leave-active { animation: popOut 0.2s ease-in forwards; }
+@keyframes popIn  { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes popOut { from { transform: scale(1); opacity: 1; } to { transform: scale(0.5); opacity: 0; } }
+
+/* Checkmark */
+.success-circle { width: 80px; height: 80px; }
+.checkmark { width: 80px; height: 80px; }
+
+.checkmark-circle {
+  stroke: #22c55e;
+  stroke-width: 3;
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: strokeCircle 0.5s ease forwards;
+}
+
+.checkmark-check {
+  stroke: #22c55e;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: strokeCheck 0.3s ease 0.4s forwards;
+}
+
+@keyframes strokeCircle { to { stroke-dashoffset: 0; } }
+@keyframes strokeCheck  { to { stroke-dashoffset: 0; } }
+
+/* Confetti */
 @keyframes confettiFall {
   0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
