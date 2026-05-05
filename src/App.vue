@@ -130,25 +130,29 @@ const sisaBelumBayar = computed(() =>
       </div>
 
       <!-- TOTAL -->
-<div class="grid grid-cols-3 gap-3 mb-4">
-  <div class="bg-white p-3 rounded-xl shadow">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+ <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+  <div class="bg-white p-3 rounded-xl shadow min-w-0">
     <p class="text-sm text-gray-500">Total Harus</p>
-    <p class="font-bold text-lg">
+    <p class="font-bold text-lg break-all">
       Rp {{ new Intl.NumberFormat('id-ID').format(totalSemua) }}
     </p>
   </div>
-  <div class="bg-green-100 p-3 rounded-xl shadow">
+
+  <div class="bg-green-100 p-3 rounded-xl shadow min-w-0">
     <p class="text-sm text-gray-500">Sudah Bayar</p>
-    <p class="font-bold text-lg text-green-700">
+    <p class="font-bold text-lg text-green-700 break-all">
       Rp {{ new Intl.NumberFormat('id-ID').format(totalBayar) }}
     </p>
   </div>
-  <div class="bg-red-100 p-3 rounded-xl shadow">
+
+  <div class="bg-red-100 p-3 rounded-xl shadow min-w-0">
     <p class="text-sm text-gray-500">Kurang</p>
-    <p class="font-bold text-lg text-red-600">
+    <p class="font-bold text-lg text-red-600 break-all">
       Rp {{ new Intl.NumberFormat('id-ID').format(sisaBelumBayar) }}
     </p>
   </div>
+</div>
 </div>
 
       <!-- BELUM BAYAR -->
