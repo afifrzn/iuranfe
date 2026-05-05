@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 
-const API = import.meta.env.VITE_API_URL || 'http://10.10.101.243'
+const API = import.meta.env.VITE_API_URL || 'http://iuranapi.afifrzn.my.id/api'
 
 const data = ref([])
 const name = ref('')
