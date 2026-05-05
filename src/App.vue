@@ -42,11 +42,15 @@ const batal = async (id) => {
   fetchData()
 }
 
+const search = ref('')
+
+const downgrade = async (id) => {
+  await axios.post(`${API}/participants/${id}/downgrade`)
+  fetchData()
+}
 
 onMounted(fetchData)
 
-
-// 🔥 COMPUTED (inti fitur kamu)
 const totalSemua = computed(() =>
   data.value.reduce((sum, p) => sum + p.amount, 0)
 )
@@ -63,6 +67,12 @@ const belumBayar = computed(() =>
 const sudahBayar = computed(() =>
   data.value.filter(p => p.paid)
 )
+
+const filtered = computed(() => {
+  return data.value.filter(p =>
+    p.name.toLowerCase().includes(search.value.toLowerCase())
+  )
+})
 </script>
 
 <template>
@@ -72,6 +82,11 @@ const sudahBayar = computed(() =>
       <h1 class="text-2xl font-bold mb-4">💸 Iuran Villa</h1>
 
       <!-- FORM -->
+       <input
+        v-model="search"
+        placeholder="Cari nama..."
+        class="border p-2 w-full rounded mb-3 text-black"
+      />
       <div class="bg-white p-4 rounded-xl shadow mb-4">
         <input v-model="name" placeholder="Nama"
           class="border p-2 w-full rounded mb-2 text-black" />
@@ -108,7 +123,7 @@ const sudahBayar = computed(() =>
       <div class="bg-white p-4 rounded-xl shadow mb-4">
         <h2 class="font-semibold mb-2 text-red-500">Belum Bayar</h2>
 
-        <div v-for="p in belumBayar" :key="p.id"
+        <div v-for="p in filtered.filter(p => !p.paid)" :key="p.id"
           class="flex justify-between border-b py-2">
 
           <div>
@@ -119,14 +134,27 @@ const sudahBayar = computed(() =>
           </div>
 
           <div class="flex gap-2">
-            <button @click="upgrade(p.id)"
-              v-if="p.amount === 100000"
-              class="bg-yellow-500 text-white px-2 rounded text-sm">
+            <!-- +Makan -->
+            <button
+              v-if="!p.with_meal"
+              @click="upgrade(p.id)"
+              class="bg-green-500 text-white px-2 py-1 rounded text-sm"
+            >
               +Makan
             </button>
-
-            <button @click="bayar(p.id)"
-              class="bg-blue-500 text-white px-2 rounded text-sm">
+            <!-- -Makan -->
+            <button
+              v-if="p.with_meal"
+              @click="downgrade(p.id)"
+              class="bg-yellow-500 text-white px-2 py-1 rounded text-sm"
+            >
+              -Makan
+            </button>
+            <!-- Bayar -->
+            <button
+              @click="bayar(p.id)"
+              class="bg-blue-500 text-white px-2 py-1 rounded text-sm"
+            >
               Bayar
             </button>
           </div>
@@ -137,28 +165,42 @@ const sudahBayar = computed(() =>
       <div class="bg-white p-4 rounded-xl shadow">
         <h2 class="font-semibold mb-2 text-green-600">Sudah Bayar</h2>
 
-        <div v-for="p in sudahBayar"
-        :key="p.id"
-        class="flex justify-between border-b py-2"
-      >
-        <div>
-          <p class="text-green-700">{{ p.name }}</p>
-          <p class="text-sm text-gray-500">
-            Rp {{ new Intl.NumberFormat('id-ID').format(p.amount) }}
-          </p>
-        </div>
+        <div v-for="p in filtered.filter(p => p.paid)"
+          :key="p.id"
+          class="flex justify-between border-b py-2"
+        >
+          <div>
+            <p class="text-green-700">{{ p.name }}</p>
+            <p class="text-sm text-gray-500">
+              Rp {{ new Intl.NumberFormat('id-ID').format(p.amount) }}
+            </p>
+          </div>
 
-        <div class="flex gap-2">
-          <span class="text-green-600 text-sm">✔ Lunas</span>
-
-          <button
-            @click="batal(p.id)"
-            class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm"
-          >
-            Batal
-          </button>
+          <div class="flex gap-2">
+            <!-- -Makan kalau sudah makan -->
+            <button
+              v-if="p.with_meal"
+              @click="downgrade(p.id)"
+              class="bg-yellow-500 text-white px-2 py-1 rounded text-sm"
+            >
+              -Makan
+            </button>
+            <!-- +Makan kalau belum -->
+            <button
+              v-if="!p.with_meal"
+              @click="upgrade(p.id)"
+              class="bg-green-500 text-white px-2 py-1 rounded text-sm"
+            >
+              +Makan
+            </button>
+            <button
+              @click="batal(p.id)"
+              class="bg-red-500 text-white px-2 py-1 rounded text-sm"
+            >
+              Batal
+            </button>
+          </div>
         </div>
-      </div>
       </div>
 
     </div>
