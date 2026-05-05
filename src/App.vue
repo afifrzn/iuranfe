@@ -36,6 +36,13 @@ const upgrade = async (id) => {
   fetchData()
 }
 
+const batal = async (id) => {
+  if (!confirm('Yakin batalin pembayaran?')) return
+  await axios.post(`${API}/participants/${id}/batal`)
+  fetchData()
+}
+
+
 onMounted(fetchData)
 
 
@@ -130,18 +137,28 @@ const sudahBayar = computed(() =>
       <div class="bg-white p-4 rounded-xl shadow">
         <h2 class="font-semibold mb-2 text-green-600">Sudah Bayar</h2>
 
-        <div v-for="p in sudahBayar" :key="p.id"
-          class="flex justify-between border-b py-2">
-
-          <div>
-            <p class="text-green-700">{{ p.name }}</p>
-            <p class="text-sm text-gray-500">
-              Rp {{ new Intl.NumberFormat('id-ID').format(p.amount) }}
-            </p>
-          </div>
-
-          <span class="text-green-600 text-sm">✔ Lunas</span>
+        <div v-for="p in sudahBayar"
+        :key="p.id"
+        class="flex justify-between border-b py-2"
+      >
+        <div>
+          <p class="text-green-700">{{ p.name }}</p>
+          <p class="text-sm text-gray-500">
+            Rp {{ new Intl.NumberFormat('id-ID').format(p.amount) }}
+          </p>
         </div>
+
+        <div class="flex gap-2">
+          <span class="text-green-600 text-sm">✔ Lunas</span>
+
+          <button
+            @click="batal(p.id)"
+            class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm"
+          >
+            Batal
+          </button>
+        </div>
+      </div>
       </div>
 
     </div>
