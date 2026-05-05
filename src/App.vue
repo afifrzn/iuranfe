@@ -91,6 +91,10 @@ const filtered = computed(() =>
     p.name.toLowerCase().includes(search.value.toLowerCase())
   )
 )
+
+const sisaBelumBayar = computed(() =>
+  data.value.filter(p => !p.paid).reduce((sum, p) => sum + p.amount, 0)
+)
 </script>
 
 <template>
@@ -126,20 +130,26 @@ const filtered = computed(() =>
       </div>
 
       <!-- TOTAL -->
-      <div class="grid grid-cols-2 gap-3 mb-4">
-        <div class="bg-white p-3 rounded-xl shadow">
-          <p class="text-sm">Total Harus</p>
-          <p class="font-bold text-lg">
-            Rp {{ new Intl.NumberFormat('id-ID').format(totalSemua) }}
-          </p>
-        </div>
-        <div class="bg-green-100 p-3 rounded-xl shadow">
-          <p class="text-sm">Sudah Bayar</p>
-          <p class="font-bold text-lg text-green-700">
-            Rp {{ new Intl.NumberFormat('id-ID').format(totalBayar) }}
-          </p>
-        </div>
-      </div>
+<div class="grid grid-cols-3 gap-3 mb-4">
+  <div class="bg-white p-3 rounded-xl shadow">
+    <p class="text-sm text-gray-500">Total Harus</p>
+    <p class="font-bold text-lg">
+      Rp {{ new Intl.NumberFormat('id-ID').format(totalSemua) }}
+    </p>
+  </div>
+  <div class="bg-green-100 p-3 rounded-xl shadow">
+    <p class="text-sm text-gray-500">Sudah Bayar</p>
+    <p class="font-bold text-lg text-green-700">
+      Rp {{ new Intl.NumberFormat('id-ID').format(totalBayar) }}
+    </p>
+  </div>
+  <div class="bg-red-100 p-3 rounded-xl shadow">
+    <p class="text-sm text-gray-500">Kurang</p>
+    <p class="font-bold text-lg text-red-600">
+      Rp {{ new Intl.NumberFormat('id-ID').format(sisaBelumBayar) }}
+    </p>
+  </div>
+</div>
 
       <!-- BELUM BAYAR -->
       <div class="bg-white p-4 rounded-xl shadow mb-4">
